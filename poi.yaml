@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: api
+  name: poi-deployment
+  labels:
+    app: poi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: poi
+  template:
+    metadata:
+      labels:
+        app: poi
+    spec:
+      containers:
+       - name: poi
+         image: registryjrc4068.azurecr.io/arun/poi:1.0
+         env:
+         - name: SQL_SERVER
+           valueFrom:
+            secretKeyRef:
+              name: sql-db-credentials
+              key: sql-server-name
+         - name: SQL_USER
+           valueFrom:
+            secretKeyRef:
+              name: sql-db-credentials
+              key: sql-username
+         - name: SQL_PASSWORD
+           valueFrom:
+            secretKeyRef:
+              name: sql-db-credentials
+              key: sql-password
+         - name: ASPNETCORE_ENVIRONMENT
+           value: "Local"
+         - name: SQL_DBNAME
+           valueFrom:
+            secretKeyRef:
+              name: sql-db-credentials
+              key: sql-db-name
+         ports:
+         - containerPort: 80
+         imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: api
+  name:  poi-svc
+spec:
+  selector:
+    app:  poi
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP

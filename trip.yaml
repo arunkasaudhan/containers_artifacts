@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: api
+  name: trip-deployment
+  labels:
+    app: trip
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trip
+  template:
+    metadata:
+      labels:
+        app: trip
+    spec:
+      containers:
+       - name: trip
+         image: registryjrc4068.azurecr.io/arun/trips:1.0
+         env:
+         - name: SQL_SERVER
+           valueFrom:
+            secretKeyRef:
+              name: sql-db-credentials
+              key: sql-server-name
+         - name: SQL_USER
+           valueFrom:
+            secretKeyRef:
+              name: sql-db-credentials
+              key: sql-username
+         - name: SQL_PASSWORD
+           valueFrom:
+            secretKeyRef:
+              name: sql-db-credentials
+              key: sql-password
+         - name: SQL_DBNAME
+           valueFrom:
+            secretKeyRef:
+              name: sql-db-credentials
+              key: sql-db-name
+         #- name: OPENAPI_DOCS_URI
+         #  value: "http://changeme"
+         - name: "DEBUG_LOGGING"
+           value: "false"
+         ports:
+         - containerPort: 80
+         imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: api
+  name:  trip-svc
+spec:
+  selector:
+    app:  trip
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
